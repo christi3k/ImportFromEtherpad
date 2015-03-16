@@ -1,0 +1,17 @@
+{
+  "@metadata" : {
+    "authors": ["ckoehler"]
+  },
+  "etherpadtopage": "Import from Etherpad",
+  "etherpadtopage-desc": "Create a wiki page from an etherpad",
+  "etherpadtopage-summary": "Use this Special page to create a wiki page from an etherpad.",
+  "etherpadtopage-intro": "Both etherpad classic and etherpad lite supported. The etherpad must be publicly available with no password.",
+  "etherpadtopage-fieldset-legend": "",
+  "etherpadtopage-text": "Enter etherpad and target page.",
+  "etherpadtopage-label-eplink": "Link to etherpad:",
+  "etherpadtopage-submitbtn": "Import",
+  "etherpadtopage-label-targetpage": "Target page",
+  "etherpadtopage-nopermission": "You must have createpage permission to use this feature.",
+  "etherpadtopage-invalidetherpad": "Invalid etherpad url given.",
+  "etherpadtopage-invalidpagetitle": "Invalid page title given."
+}

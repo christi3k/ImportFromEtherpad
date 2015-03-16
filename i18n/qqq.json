@@ -1,0 +1,8 @@
+{
+  "@metadata" : {
+    "authors": ["your username"]
+  },
+  "etherpadtopage" : "The name of the extension's entry in Special:SpecialPages",
+  "etherpadtopage-desc":"{{desc}}",
+  "etherpadtopage-summary":"Description appearing on top of [[Special:EtherpadToPage]]",
+}

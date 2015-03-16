@@ -1,6 +1,6 @@
 <?php
 
-$wgExtensionCredits['parserhook'][] = array(
+$wgExtensionCredits['specialpage'][] = array(
 	'path' => __FILE__,
 	'name' => 'EtherpadToPage',
 	'description' => 'Create a wiki page from an etherpad.',
@@ -12,8 +12,10 @@ $wgExtensionCredits['parserhook'][] = array(
 
 $includesDirectory = __DIR__ . '/includes';
 
-$wgAutoloadClasses['EtherpadToPage'] = $includesDirectory . '/EtherpadToPage.php';
+$wgAutoloadClasses['SpecialEtherpadToPage'] = __DIR__ . '/SpecialEtherpadToPage.php';
+$wgMessagesDirs['EtherpadToPage'] = __DIR__ . '/i18n';
+$wgExtensionMessagesFiles['EtherpadToPageAlias'] = __DIR__ . '/EtherpadToPage.alias.php';
+$wgSpecialPages['EtherpadToPage'] = 'SpecialEtherpadToPage';
 
-$wgHooks['ParserFirstCallInit'][] = 'EtherpadToPage::setHook';
 
 /* vim:set ts=4 sw=4 sts=4 noexpandtab: */
