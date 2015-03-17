@@ -29,20 +29,46 @@ class SpecialEtherpadToPage extends SpecialPage {
 		if ($request->wasPosted() && $request->getVal('action') == 'submit') {
 			$this->loadRequest();
 		}
+		else {
+			$this->displayForm();
+		}
 		// either way display the form
 		// if unprocessed, basic form will be shown
 		// otherwise will display with errors and/or result of import
-		$this->displayForm();
 	}
 
 	function getGroupName() {
 		return 'pagetools';
 	}
 
-	private function displayForm($message = null) {
+	private function displayForm( $errors = array() ) {
+		$message = '';
 		$action = $this->getPageTitle()->getLocalURL(array('action'=>'submit'));
 		$out = $this->getOutput();
 		$user = $this->getUser();
+
+		$request = $this->getRequest();
+
+		// get values from request object
+		$this->etherpadLink= $request->getText('etherpadLink');
+		$this->targetpageTitle = $request->getText('targetpageTitle');
+		$this->targetpageNs = $request->getIntOrNull('targetpageNs');
+
+		if ( count ( $errors ) == 1 && isset ( $errors[0][0] ) && $errors[0][0] == 'targetpage-exists') {
+				// change submit button to be replace or append
+				$submitButton = "<tr><td colspan='2'><strong>".$this->msg('etherpadtopage-append-or-replace-label')."</strong></td></tr>";
+				$submitButton .= "<tr><td></td>";
+				$submitButton .= "<td class='mw-submit'>";
+				$submitButton .= Xml::submitButton($this->msg('etherpadtopage-append-btn')->text(), array('id' => 'etherpadtopage-append'));
+				$submitButton .= Xml::submitButton($this->msg('etherpadtopage-replace-btn')->text(), array('id' => 'etherpadtopage-replace'));
+				$submitButton .= "</td></tr>";
+				$errors = array();
+			} else {
+				$submitButton = "<tr><td></td>";
+				$submitButton .= "<td class='mw-submit'>";
+				$submitButton .= Xml::submitButton($this->msg('etherpadtopage-submitbtn')->text(), array('id' => 'etherpadtopage-submit'));
+				$submitButton .= "</td></tr>";
+			}
 
 		// display error message if there is one
 		if($message) {
@@ -65,7 +91,7 @@ class SpecialEtherpadToPage extends SpecialPage {
 				Xml::label($this->msg('etherpadtopage-label-eplink')->text(), 'mw-eplink') .
 				"</td>" .
 				"<td class='mw-input'>" .
-				Xml::input('etherpadLink', 50, (''), array('id' => 'mw-eplink', 'type'=>'text')) .
+				Xml::input('etherpadLink', 50, ($this->etherpadLink), array('id' => 'mw-eplink', 'type'=>'text')) .
 				"</td></tr>" .
 				"<tr><td class='mw-label'>" .
 				Xml::label($this->msg('etherpadtopage-label-targetpage')->text(), 'mw-targetpage') .
@@ -73,16 +99,13 @@ class SpecialEtherpadToPage extends SpecialPage {
 				"<td class='mw-input'>" .
 				Html::namespaceSelector(
 					array(
-						'selected' => NS_MAIN
+						'selected' => ($this->targetpageNs ? $this->targetpageNs : NS_MAIN)
 					),
 					array('name' => 'targetpageNs', 'id' => 'mw-targetpage-ns')
 				) .
-				Xml::input('targetpageTitle', 50, (''), array('id' => 'mw-targetpage', 'type'=>'text')) .
+				Xml::input('targetpageTitle', 50, $this->targetpageTitle, array('id' => 'mw-targetpage', 'type'=>'text')) .
 				"</td></tr>" .
-				"<tr><td></td>" .
-				"<td class='mw-submit'>" .
-				Xml::submitButton($this->msg('etherpadtopage-submitbtn')->text(), array('id' => 'etherpadtopage-submit')) .
-				"</td></tr>" .
+				$submitButton .
 				Xml::closeElement('table') . 
 				Html::hidden( 'editToken', $user->getEditToken() ) .
 				Xml::closeElement('form') . 
@@ -124,7 +147,7 @@ class SpecialEtherpadToPage extends SpecialPage {
 
 		// try the import and catch any exceptions
 		try {
-			$this->importEtherpad();
+			$importResult = $this->importEtherpad();
 		} catch ( MWException $e ) {
 			$exception = $e;
 		}
@@ -135,15 +158,24 @@ class SpecialEtherpadToPage extends SpecialPage {
 				"<p class=\"error\">\n$1\n</p>",
 				array( 'importfailed', $exception->getMessage() )
 			);
+			$this->displayForm();
 		} elseif ( !$this->result->isGood() ) {
 			//show any fatal errors that are not exceptions
 			$output->wrapWikiMsg(
 				"<p class=\"error\">\n$1\n</p>",
 				array( 'importfailed', $this->result->getWikiText() )
 			);
+			$this->displayForm();
+		} else if ( !$importResult) {
+			$this->displayForm($this->formErrors);
 		} else {
 			// show success!
-			$output->addWikiMsg( 'importsuccess' );
+			$output->addWikiMsg( 'etherpadtopage-importsuccess' );
+			if (isset($this->resultMessage)) {
+				$output->addWikiMsg( $this->resultMessage );
+			}
+			$newLink = Linker::linkKnown($this->newTitle);
+			$output->addHTML( $this->msg( 'etherpadtopage-newlink' )->rawParams( $newLink )->parseAsBlock() );
 		}
 		$output->addHTML( '<hr />' );
 	}
@@ -162,6 +194,11 @@ class SpecialEtherpadToPage extends SpecialPage {
 			$this->result->fatal( 'etherpadtopage-invalidpagetitle' );
 			return false;
 		}
+		// does the target page already exist?
+		if ( $this->newTitle->exists() ) {
+			$this->formErrors = array( array( 'targetpage-exists' ) );
+			return false;
+		}
 
 		// convert content
 		if ( !$this->convertContent() ) {
@@ -169,11 +206,20 @@ class SpecialEtherpadToPage extends SpecialPage {
 			return false;
 		}
 
-		//$this->saveArticle();
+		// save article
+		$apiResult = $this->saveArticle();
 
-		//// save article
-		if ( $this->saveArticle() ){
-			$this->result->setResult(true, 'Page successfully imported.');
+		if ( isset( $apiResult['edit'] ) && $apiResult['edit']['result'] == 'Success' ){
+			if ( isset( $apiResult['edit']['new'] ) ) {
+				$this->resultMessage = 'etherpadtopage-sucessful-new';
+			}
+			else if ( isset( $apiResult['edit']['oldrevid'] ) && $apiResult['edit']['oldrevid'] == 0 ) {
+				$this->resultMessage = 'etherpadtopage-sucessful-update';
+			}
+			else if ( isset( $apiResult['edit']['nochange'] ) ) {
+				$this->resultMessage = 'etherpadtopage-sucessful-nochange';
+			}
+			$this->result->setResult(true);
 			return true;
 		} else {
 			$this->result->fatal( 'etherpadtopage-savefail' );
@@ -185,7 +231,7 @@ class SpecialEtherpadToPage extends SpecialPage {
 		// @todo check for edit or create
 		// @todo set appropriate comment
 		$action = 'edit';
-		$comment = 'test comment';
+		$comment = 'Page generated from '. $this->etherpadLink;
         $api = new ApiMain(
                 new DerivativeRequest(
                 $this->getRequest(), // Fallback upon $wgRequest if you can't access context
@@ -202,12 +248,7 @@ class SpecialEtherpadToPage extends SpecialPage {
 		$api->execute(); // actually save the article.
 		$apiResult = $api->getResult()->getData();
 		error_log(var_export($apiResult, true));
-		if( isset($apiResult['edit']) && $apiResult['edit']['result'] == 'Success' ) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return $api->getResult()->getData();
 	}
 
 	private function makeTitle($namespace = NS_MAIN) {

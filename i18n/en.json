@@ -13,5 +13,10 @@
   "etherpadtopage-label-targetpage": "Target page",
   "etherpadtopage-nopermission": "You must have createpage permission to use this feature.",
   "etherpadtopage-invalidetherpad": "Invalid etherpad url given.",
-  "etherpadtopage-invalidpagetitle": "Invalid page title given."
+  "etherpadtopage-invalidpagetitle": "Invalid page title given.",
+  "etherpadtopage-importsuccess": "Import successful!",
+  "etherpadtopage-newlink": "Your page available at: $1.",
+  "etherpadtopage-append-or-replace-label": "Target page already exists. Would you like to append or replace?",
+  "etherpadtopage-append-btn" : "Append",
+  "etherpadtopage-replace-btn" : "Replace"
 }
