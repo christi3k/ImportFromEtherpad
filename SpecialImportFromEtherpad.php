@@ -291,6 +291,8 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		// @todo add check that pandoc exists
 		$panDocCmd = $this->pathToPandoc . $this->pandocCmd . " -f html -t mediawiki $exportUrl";
 		$this->content = wfShellExec($panDocCmd);
+		// replace the funky br's the ep classic gens with newlines
+		$this->content = preg_replace('/<br\s*\/>/m',"\n",$this->content);
 		return true;
 	}
 
