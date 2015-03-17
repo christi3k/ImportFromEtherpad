@@ -3,13 +3,13 @@
 // Must be run inside Mediawiki environment
 if ( !defined( 'MEDIAWIKI' ) ) die();
 
-define( 'EtherpadToPage_VERSION', '1.0' );
+define( 'ImportFromEtherpad_VERSION', '1.0' );
 
-class EtherpadToPageSettings {
+class ImportFromEtherpadSettings {
 	public $pathToPandoc;
 }
 
-$GLOBALS['wgEtherpadToPageSettings'] = new EtherpadToPageSettings();
+$GLOBALS['wgImportFromEtherpadSettings'] = new ImportFromEtherpadSettings();
 
 //self executing anonymous function to prevent global scope assumptions
 //(borrowed from GraphViz extension)
@@ -17,29 +17,29 @@ call_user_func( function() {
 
 	// Set execution path
 	if ( stristr( PHP_OS, 'WIN' ) && !stristr( PHP_OS, 'Darwin' ) ) {
-		$GLOBALS['wgEtherpadToPageSettings']->pathToPandoc = 'C:/Program Files/Pandoc/';
-		$GLOBALS['wgEtherpadToPageSettings']->pandocCmd = 'pandoc.exe';
+		$GLOBALS['wgImportFromEtherpadSettings']->pathToPandoc = 'C:/Program Files/Pandoc/';
+		$GLOBALS['wgImportFromEtherpadSettings']->pandocCmd = 'pandoc.exe';
 	} else {
-		$GLOBALS['wgEtherpadToPageSettings']->pathToPandoc = '/usr/bin/';
-		$GLOBALS['wgEtherpadToPageSettings']->pandocCmd = 'pandoc';
+		$GLOBALS['wgImportFromEtherpadSettings']->pathToPandoc = '/usr/bin/';
+		$GLOBALS['wgImportFromEtherpadSettings']->pandocCmd = 'pandoc';
 	}
 
 	$dir = __DIR__;
 
 	$GLOBALS['wgExtensionCredits']['specialpage'][] = array(
 		'path' => __FILE__,
-		'name' => 'EtherpadToPage',
+		'name' => 'Import From Etherpad',
 		'description' => 'Create a wiki page from an etherpad.',
 		'version' => '1.0',
 		'author' => '[http://christiekoehler.com Christie Koehler]',
-		'url' => 'https://github.com/christi3k/EtherpadToPage',
+		'url' => 'https://github.com/christi3k/ImportFromEtherpad',
 		'license-name' => 'MPL 2.0'
 	);
 
-	$GLOBALS['wgAutoloadClasses']['SpecialEtherpadToPage'] = $dir . '/SpecialEtherpadToPage.php';
-	$GLOBALS['wgMessagesDirs']['EtherpadToPage'] = $dir . '/i18n';
-	$GLOBALS['wgExtensionMessagesFiles']['EtherpadToPageAlias'] = $dir . '/EtherpadToPage.alias.php';
-	$GLOBALS['wgSpecialPages']['EtherpadToPage'] = 'SpecialEtherpadToPage';
+	$GLOBALS['wgAutoloadClasses']['SpecialImportFromEtherpad'] = $dir . '/SpecialImportFromEtherpad.php';
+	$GLOBALS['wgMessagesDirs']['ImportFromEtherpad'] = $dir . '/i18n';
+	$GLOBALS['wgExtensionMessagesFiles']['ImportFromEtherpadAlias'] = $dir . '/ImportFromEtherpad.alias.php';
+	$GLOBALS['wgSpecialPages']['ImportFromEtherpad'] = 'SpecialImportFromEtherpad';
 
 } );
 
