@@ -56,19 +56,16 @@ class SpecialEtherpadToPage extends SpecialPage {
 
 		if ( count ( $errors ) == 1 && isset ( $errors[0][0] ) && $errors[0][0] == 'targetpage-exists') {
 				// change submit button to be replace or append
-				$submitButton = "<tr><td colspan='2'><strong>".$this->msg('etherpadtopage-append-or-replace-label')."</strong></td></tr>";
-				$submitButton .= "<tr><td></td>";
-				$submitButton .= "<td class='mw-submit'>";
-				$submitButton .= Xml::submitButton($this->msg('etherpadtopage-append-btn')->text(), array('id' => 'etherpadtopage-append'));
-				$submitButton .= Xml::submitButton($this->msg('etherpadtopage-replace-btn')->text(), array('id' => 'etherpadtopage-replace'));
-				$submitButton .= "</td></tr>";
+				$appendOrReplaceRadio = "<tr><td colspan='2'><strong>".$this->msg('etherpadtopage-append-or-replace-label')."</strong></td></tr>";
+				$appendOrReplaceRadio .= "<tr><td></td>";
+				$appendOrReplaceRadio .= "<td class='mw-submit'>";
+				$appendOrReplaceRadio .= Xml::radioLabel($this->msg('etherpadtopage-append-btn')->text(), 'pageAppendOrReplace', 'append', 'mw-append');
+				$appendOrReplaceRadio .= Xml::radioLabel($this->msg('etherpadtopage-replace-btn')->text(), 'pageAppendOrReplace', 'replace', 'mw-replace');
+				$appendOrReplaceRadio .= "</td></tr>";
 				$errors = array();
-			} else {
-				$submitButton = "<tr><td></td>";
-				$submitButton .= "<td class='mw-submit'>";
-				$submitButton .= Xml::submitButton($this->msg('etherpadtopage-submitbtn')->text(), array('id' => 'etherpadtopage-submit'));
-				$submitButton .= "</td></tr>";
-			}
+		} else {
+				$appendOrReplaceRadio = '';
+		}
 
 		// display error message if there is one
 		if($message) {
@@ -105,7 +102,11 @@ class SpecialEtherpadToPage extends SpecialPage {
 				) .
 				Xml::input('targetpageTitle', 50, $this->targetpageTitle, array('id' => 'mw-targetpage', 'type'=>'text')) .
 				"</td></tr>" .
-				$submitButton .
+				$appendOrReplaceRadio .
+				"<tr><td></td>" .
+				"<td class='mw-submit'>" .
+				Xml::submitButton($this->msg('etherpadtopage-submitbtn')->text(), array('id' => 'etherpadtopage-submit')) .
+				"</td></tr>" .
 				Xml::closeElement('table') . 
 				Html::hidden( 'editToken', $user->getEditToken() ) .
 				Xml::closeElement('form') . 
@@ -124,6 +125,7 @@ class SpecialEtherpadToPage extends SpecialPage {
 		$this->etherpadLink= $request->getText('etherpadLink');
 		$this->targetpageTitle = $request->getText('targetpageTitle');
 		$this->targetpageNs = $request->getIntOrNull('targetpageNs');
+		$this->pageAppendOrReplace = $request->getVal('pageAppendOrReplace');
 
 		$output = $this->getOutput();
 
@@ -194,8 +196,10 @@ class SpecialEtherpadToPage extends SpecialPage {
 			$this->result->fatal( 'etherpadtopage-invalidpagetitle' );
 			return false;
 		}
+
 		// does the target page already exist?
-		if ( $this->newTitle->exists() ) {
+		// and has the user not already indicated we should append/or replace?
+		if ( $this->newTitle->exists() && !isset($this->pageAppendOrReplace) ) {
 			$this->formErrors = array( array( 'targetpage-exists' ) );
 			return false;
 		}
@@ -230,6 +234,7 @@ class SpecialEtherpadToPage extends SpecialPage {
 	private function saveArticle() {
 		// @todo check for edit or create
 		// @todo set appropriate comment
+		$textOrAppendText = ( isset( $this->pageAppendOrReplace ) && $this->pageAppendOrReplace == 'append') ? 'appendtext' : 'text';
 		$action = 'edit';
 		$comment = 'Page generated from '. $this->etherpadLink;
         $api = new ApiMain(
@@ -238,7 +243,7 @@ class SpecialEtherpadToPage extends SpecialPage {
                 array(
             'action' => $action,
             'title' => $this->newTitle,
-            'text' => $this->content, // can only use one of 'text' or 'appendtext'
+            $textOrAppendText => $this->content, // can only use one of 'text' or 'appendtext'
             'summary' => $comment,
             'notminor' => true,
             'token' => $this->token
