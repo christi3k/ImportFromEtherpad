@@ -19,5 +19,7 @@
   "importfrometherpad-append-or-replace-label": "Target page already exists. Would you like to append or replace?",
   "importfrometherpad-append-btn" : "Append",
   "importfrometherpad-replace-btn" : "Replace",
-  "importfrometherpad-sucessful-new": "You have created a new page."
+  "importfrometherpad-sucessful-new": "You have created a new page.",
+  "importfrometherpad-novalidexporturl": "No valid etherpad export url found.",
+  "importfrometherpad-fail": "Unable to import from etherpad"
 }

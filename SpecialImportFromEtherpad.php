@@ -71,10 +71,13 @@ class SpecialImportFromEtherpad extends SpecialPage {
 				$appendOrReplaceRadio = '';
 		}
 
-		// display error message if there is one
-		if($message) {
-			$out->addHTML('<div class="error">'.$message.'</div>\n');
+		// display all errors
+		if( count ($errors) > 0 ){
+			foreach($errors as $error) {
+				$out->addHTML('<div class="error">'.$this->msg($error)->text().'</div>');
+			}
 		}
+
 		if ( $user->isAllowed( 'createpage' ) ) {
 			$out->addHTML(
 				Xml::fieldset($this->msg('importfrometherpad-fieldset-legend')->text()) .
@@ -197,7 +200,7 @@ class SpecialImportFromEtherpad extends SpecialPage {
 			// reset form errors array
 			$this->formErrors = array();
 		}
-		$output->addHTML( '<hr />' );
+		//$output->addHTML( '<hr />' );
 
 		// always re-display form after loading request
 		// if there are errors or other messages, form will show them
@@ -288,28 +291,79 @@ class SpecialImportFromEtherpad extends SpecialPage {
 	{
 		// derive the export url from etherpad url
 		$exportUrl = $this->getExportUrl();
-		// @todo add check that pandoc exists
-		$panDocCmd = $this->pathToPandoc . $this->pandocCmd . " -f html -t mediawiki $exportUrl";
-		$this->content = wfShellExec($panDocCmd);
-		// replace the funky br's the ep classic gens with newlines
-		$this->content = preg_replace('/<br\s*\/>/m',"\n",$this->content);
+		if ($exportUrl === false) {
+			wfDebug('no exportUrl, aborting');
+			return false;
+		}
+
+		if ( $exportUrl['scheme'] == 'lite-mediawiki' ) {
+			// already mediawiki so no need to run through pandoc,
+			// just go get it
+			wfDebug('this is eplite that supports mediawiki export, using that');
+			$this->content = $this->fetchContent( $exportUrl['url'] );
+			if ( !$this->content) { return false; }
+		}
+		else {
+			wfDebug('converting with pandoc');
+			// @todo add check that pandoc exists
+			$panDocCmd = $this->pathToPandoc . $this->pandocCmd . " -f html -t mediawiki " . $exportUrl['url'];
+			$this->content = wfShellExec($panDocCmd, $returnVal);
+			wfDebug('Pandoc return value: ' . $returnVal);
+			// replace the funky br's the ep classic gens with newlines
+			// @todo should prob move to a helper function
+			$this->content = preg_replace('/<br\s*\/>/m',"\n",$this->content);
+		}
 		return true;
 	}
 
 	private function getExportUrl()
 	{
+		wfDebug('attempting to determine export url');
 		$parsedUrl = parse_url($this->etherpadLink);
-		// is it etherpad lite?
-		// from what I can tell, etherpad lites always have /p as first part of path
-		if( preg_match('/^\/p/', $parsedUrl['path']) ) {
-			$exportUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $parsedUrl['path'] . '/export/html';
+		// build an array of possible valid etherpad export urls
+		// in order of preference
+		$schemes = array();
+		$schemes['classic-html'] = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . '/' . 'ep/pad/export' . $parsedUrl['path'] . '/latest?format=html';
+		$schemes['lite-mediawiki'] = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $parsedUrl['path'] . '/export/mediawiki';
+		$schemes['lite-html'] = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $parsedUrl['path'] . '/export/html';
+
+		// now loop through them until we find a good one
+		foreach ($schemes as $scheme => $url) {
+			wfDebug('testing: ' . $url);
+			if ( $this->isGoodExportUrl( $url ) ) {
+				return array('scheme' => $scheme, 'url' => $url);
+			}
+		}
+		// if we get this far and don't have a valid url, return false
+		$this->formErrors[] = array( 'importfrometherpad-novalidexporturl' );
+		return false;
+	}
+
+	private function isGoodExportUrl( $url ) {
+		$req = MWHttpRequest::factory( $url );
+		$status = $req->execute();
+		if ( $status->isOK() ) {
+			wfDebug('url ' . $url . ' is OKAY');
+			return true;
 		}
 		else {
-			// This is valid for classic etherpad
-			$exportUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . '/' . 'ep/pad/export' . $parsedUrl['path'] . '/latest?format=html';
+			$statusCode = $req->getStatus();
+			wfDebug('Response code for etherpad url ' . $url . ' returned ' . $statusCode);
+			return false;
 		}
-		// @todo add check for inaccssiable pads and/or pad exports
-		return $exportUrl;
+	}
+
+	private function fetchContent( $url ) {
+		$req = MWHttpRequest::factory( $url );
+		$status = $req->execute();
+		if ( $status->isOK() ) {
+			return $req->getContent();
+		}
+		else {
+			$statusCode = $req->getStatus();
+			wfDebug('Response code for etherpad url ' . $url . ' returned ' . $statusCode);
+			return false;
+		}
 	}
 
 }
