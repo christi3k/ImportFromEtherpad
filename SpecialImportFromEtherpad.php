@@ -309,6 +309,10 @@ class SpecialImportFromEtherpad extends SpecialPage {
 			$panDocCmd = $this->pathToPandoc . $this->pandocCmd . " -f html -t mediawiki " . $exportUrl['url'];
 			$this->content = wfShellExec($panDocCmd, $returnVal);
 			wfDebug('Pandoc return value: ' . $returnVal);
+			if ( $returnVal !== 0 ) {
+				$this->formErrors[] = array( 'importfrometherpad-pandocerror' );
+				return false;
+			}
 			// replace the funky br's the ep classic gens with newlines
 			// @todo should prob move to a helper function
 			$this->content = preg_replace('/<br\s*\/>/m',"\n",$this->content);
