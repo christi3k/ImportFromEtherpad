@@ -315,7 +315,13 @@ class SpecialImportFromEtherpad extends SpecialPage {
 			}
 			// replace the funky br's the ep classic gens with newlines
 			// @todo should prob move to a helper function
+			// @todo allow user to config these
 			$this->content = preg_replace('/<br\s*\/>/m',"\n",$this->content);
+			// make external links internal
+			$this->content = preg_replace('/\[https?:\/\/wiki\.mozilla\.org\/(.+?) https?:\/\/wiki\.mozilla\.org\/(.+?)\]/',"[[$1]]",$this->content);
+			// bugzilla, in the form of:
+			// [https://bugzilla.mozilla.org/show_bug.cgi?id=1064994 https://bugzilla.mozilla.org/show_bug.cgi?id=1064994]
+			$this->content = preg_replace('/\[https?:\/\/bugzilla\.mozilla\.org\/show_bug\.cgi\?id=(.+?) https?:\/\/bugzilla\.mozilla\.org\/show_bug\.cgi\?id=(.+?)\]/','{{bug|$1}}',$this->content);
 		}
 		return true;
 	}
