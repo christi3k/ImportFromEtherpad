@@ -320,6 +320,7 @@ class SpecialImportFromEtherpad extends SpecialPage {
 			// @todo allow user to config these
 			$this->content = preg_replace('/<br\s*\/>/m',"\n",$this->content);
 			// make external links internal
+			$this->content = preg_replace('/\[https?:\/\/wiki\.mozilla\.org\/(.+?) https?:\/\/wiki\.mozilla\.org\/Category:(.+?)\]/',"[[:$1]]",$this->content);
 			$this->content = preg_replace('/\[https?:\/\/wiki\.mozilla\.org\/(.+?) https?:\/\/wiki\.mozilla\.org\/(.+?)\]/',"[[$1]]",$this->content);
 			// bugzilla, in the form of:
 			// [https://bugzilla.mozilla.org/show_bug.cgi?id=1064994 https://bugzilla.mozilla.org/show_bug.cgi?id=1064994]
