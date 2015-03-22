@@ -10,6 +10,8 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		parent::__construct('ImportFromEtherpad', 'createpage');
 		$this->pathToPandoc = $wgImportFromEtherpadSettings->pathToPandoc;
 		$this->pandocCmd = $wgImportFromEtherpadSettings->pandocCmd;
+		$out = $this->getOutput();
+		$out->addHTML('<div style="border: 1px solid black; padding: 5px; background: orange; font-weight: bold; font-size: 1.2em;">Thank you for helping to test this extension. Please report any issues <a href="https://github.com/christi3k/ImportFromEtherpad/issues">on Github</a>. If you have quesetions, feel free to ask the developer (<a href="https://mozillians.org/u/ckoehler/">ckoehler</a>) via irc or email.</div>');
 	}
 
 	function execute( $par ) {
@@ -59,7 +61,7 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		$this->targetpageNs = $request->getIntOrNull('targetpageNs');
 
 		if ( count ( $errors ) == 1 && isset ( $errors[0][0] ) && $errors[0][0] == 'targetpage-exists') {
-				// change submit button to be replace or append
+				// add radio buttons to prompt for replace or append
 				$appendOrReplaceRadio = "<tr><td colspan='2'><strong>".$this->msg('importfrometherpad-append-or-replace-label')."</strong></td></tr>";
 				$appendOrReplaceRadio .= "<tr><td></td>";
 				$appendOrReplaceRadio .= "<td class='mw-submit'>";
