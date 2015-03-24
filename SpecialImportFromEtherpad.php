@@ -267,8 +267,8 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		// action for both page edit and create is 'edit'
 		// https://www.mediawiki.org/wiki/API:Edit
 		$action = 'edit';
-		// @todo localize comment text?
-		$comment = 'Page generated from '. $this->etherpadLink;
+		// @todo localize comment text, including link to specialpage?
+		$comment = 'Page generated from '. $this->etherpadLink . ' by [[Special:ImportFromEtherpad]]';
         $api = new ApiMain(
                 new DerivativeRequest(
                 $this->getRequest(), // Fallback upon $wgRequest if you can't access context
