@@ -319,6 +319,8 @@ class SpecialImportFromEtherpad extends SpecialPage {
 			// @todo should prob move to a helper function
 			// @todo allow user to config these
 			$this->content = preg_replace('/<br\s*\/>/m',"\n",$this->content);
+			//$this->content = preg_replace('/<br\s+\/><br\s+\/>/m',"\n\n",$this->content);
+			//$this->content = preg_replace('/<br\s*\/>/m',"<br>",$this->content);
 			// make external links internal
 			$this->content = preg_replace('/\[https?:\/\/wiki\.mozilla\.org\/(.+?) https?:\/\/wiki\.mozilla\.org\/Category:(.+?)\]/',"[[:$1]]",$this->content);
 			$this->content = preg_replace('/\[https?:\/\/wiki\.mozilla\.org\/(.+?) https?:\/\/wiki\.mozilla\.org\/(.+?)\]/',"[[$1]]",$this->content);
