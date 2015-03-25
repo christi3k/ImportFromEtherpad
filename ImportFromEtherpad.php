@@ -7,6 +7,8 @@ define( 'ImportFromEtherpad_VERSION', '1.0' );
 
 class ImportFromEtherpadSettings {
 	public $pathToPandoc;
+	public $pandocCmd;
+	public $contentRegexs;
 }
 
 $GLOBALS['wgImportFromEtherpadSettings'] = new ImportFromEtherpadSettings();
@@ -23,6 +25,9 @@ call_user_func( function() {
 		$GLOBALS['wgImportFromEtherpadSettings']->pathToPandoc = '/usr/bin/';
 		$GLOBALS['wgImportFromEtherpadSettings']->pandocCmd = 'pandoc';
 	}
+
+	// set tidy regex that most folks will want:
+	$GLOBALS['wgImportFromEtherpadSettings']->contentRegexs[] = array("<br\s*\/>","\n");
 
 	$dir = __DIR__;
 

@@ -284,13 +284,14 @@ class SpecialImportFromEtherpad extends SpecialPage {
         );
 		$api->execute(); // actually save the article.
 		$apiResult = $api->getResult()->getData();
-		error_log(var_export($apiResult, true));
 		// get and return apiResult object
 		return $api->getResult()->getData();
 	}
 
 	private function convertContent()
 	{
+		global $wgImportFromEtherpadSettings;
+
 		// derive the export url from etherpad url
 		$exportUrl = $this->getExportUrl();
 		if ($exportUrl === false) {
@@ -315,18 +316,12 @@ class SpecialImportFromEtherpad extends SpecialPage {
 				$this->formErrors[] = array( 'importfrometherpad-pandocerror' );
 				return false;
 			}
-			// replace the funky br's the ep classic gens with newlines
 			// @todo should prob move to a helper function
-			// @todo allow user to config these
-			$this->content = preg_replace('/<br\s*\/>/m',"\n",$this->content);
-			//$this->content = preg_replace('/<br\s+\/><br\s+\/>/m',"\n\n",$this->content);
-			//$this->content = preg_replace('/<br\s*\/>/m',"<br>",$this->content);
-			// make external links internal
-			$this->content = preg_replace('/\[https?:\/\/wiki\.mozilla\.org\/(.+?) https?:\/\/wiki\.mozilla\.org\/Category:(.+?)\]/',"[[:$1]]",$this->content);
-			$this->content = preg_replace('/\[https?:\/\/wiki\.mozilla\.org\/(.+?) https?:\/\/wiki\.mozilla\.org\/(.+?)\]/',"[[$1]]",$this->content);
-			// bugzilla, in the form of:
-			// [https://bugzilla.mozilla.org/show_bug.cgi?id=1064994 https://bugzilla.mozilla.org/show_bug.cgi?id=1064994]
-			$this->content = preg_replace('/\[https?:\/\/bugzilla\.mozilla\.org\/show_bug\.cgi\?id=(.+?) https?:\/\/bugzilla\.mozilla\.org\/show_bug\.cgi\?id=(.+?)\]/','{{bug|$1}}',$this->content);
+			if ( isset($wgImportFromEtherpadSettings->contentRegexs) ) {
+				foreach ($wgImportFromEtherpadSettings->contentRegexs as $regex) {
+					$this->content = preg_replace("/{$regex[0]}/m", "{$regex[1]}", $this->content);
+				}
+			}
 		}
 		return true;
 	}
