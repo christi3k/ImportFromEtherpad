@@ -7,7 +7,7 @@ class SpecialImportFromEtherpad extends SpecialPage {
 
 	public function __construct() {
 		global $wgImportFromEtherpadSettings;
-		parent::__construct('ImportFromEtherpad', 'createpage');
+		parent::__construct('ImportFromEtherpad', 'edit');
 		$this->pathToPandoc = $wgImportFromEtherpadSettings->pathToPandoc;
 		$this->pandocCmd = $wgImportFromEtherpadSettings->pandocCmd;
 		$out = $this->getOutput();
@@ -25,7 +25,7 @@ class SpecialImportFromEtherpad extends SpecialPage {
 
 		// allow only users with create and edit permissons to access
 		$user = $this->getUser();
-		if ( !$user->isAllowedAny( 'createpage', 'edit' ) ) {
+		if ( !$user->isAllowedAny( 'edit' ) ) {
 			throw new PermissionsError( 'createpage' );
 		}
 
