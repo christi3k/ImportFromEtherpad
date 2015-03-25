@@ -319,7 +319,7 @@ class SpecialImportFromEtherpad extends SpecialPage {
 			// @todo should prob move to a helper function
 			if ( isset($wgImportFromEtherpadSettings->contentRegexs) ) {
 				foreach ($wgImportFromEtherpadSettings->contentRegexs as $regex) {
-					$this->content = preg_replace("/{$regex[0]}/m", "{$regex[1]}", $this->content);
+					$this->content = preg_replace("/{$regex[0]}/mu", "{$regex[1]}", $this->content);
 				}
 			}
 		}
