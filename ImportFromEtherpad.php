@@ -9,6 +9,8 @@ class ImportFromEtherpadSettings {
 	public $pathToPandoc;
 	public $pandocCmd;
 	public $contentRegexs;
+	public $hostRegexs;
+	public $pathRegexs;
 }
 
 $GLOBALS['wgImportFromEtherpadSettings'] = new ImportFromEtherpadSettings();
@@ -32,6 +34,15 @@ call_user_func( function() {
 	// (for whatever reason, these sneak into etherpads when they shouldn't
 	$GLOBALS['wgImportFromEtherpadSettings']->contentRegexs[] = array("\x{00a0}+","");
 
+	// remove url
+	$GLOBALS['wgImportFromEtherpadSettings']->hostRegexs[] = array('\w+\.\w+\.\w+','');
+
+	// remove leading p/, common to etherpad lite 
+	$GLOBALS['wgImportFromEtherpadSettings']->pathRegexs[] = array('^p/','');
+
+	// remove hyphens because they make bad wiki titles
+	$GLOBALS['wgImportFromEtherpadSettings']->pathRegexs[] = array('-',' ');
+
 	$dir = __DIR__;
 
 	$GLOBALS['wgExtensionCredits']['specialpage'][] = array(
@@ -45,10 +56,33 @@ call_user_func( function() {
 	);
 
 	$GLOBALS['wgAutoloadClasses']['SpecialImportFromEtherpad'] = $dir . '/SpecialImportFromEtherpad.php';
+	$GLOBALS['wgAutoloadClasses']['ImportFromEtherpadHooks'] = $dir . '/ImportFromEtherpad.hooks.php';
 	$GLOBALS['wgMessagesDirs']['ImportFromEtherpad'] = $dir . '/i18n';
 	$GLOBALS['wgExtensionMessagesFiles']['ImportFromEtherpadAlias'] = $dir . '/ImportFromEtherpad.alias.php';
 	$GLOBALS['wgSpecialPages']['ImportFromEtherpad'] = 'SpecialImportFromEtherpad';
 
+	$GLOBALS['wgResourceModules']['ext.ImportFromEtherpad.main'] = array(
+		'scripts' => array(
+			'modules/ext.ImportFromEtherpad.main.js',
+		),
+		'messages' => array(),
+		'dependencies' => array(),
+		'localBasePath' => __DIR__,
+		'remoteExtPath' => $dir,
+	);
+
+	$GLOBALS['wgResourceModules']['ext.ImportFromEtherpad.main.init'] = array(
+		'scripts' => array(
+			'modules/ext.ImportFromEtherpad.main.init.js',
+		),
+		'messages' => array(),
+		'dependencies' => array('ext.ImportFromEtherpad.main'),
+		'localBasePath' => __DIR__,
+		'remoteExtPath' => $dir,
+	);
+
+	$GLOBALS['wgHooks']['BeforePageDisplay'][] = 'ImportFromEtherpadHooks::onBeforePageDisplay';
+	$GLOBALS['wgHooks']['ResourceLoaderGetConfigVars'][] = 'ImportFromEtherpadHooks::onResourceLoaderGetConfigVars';
 } );
 
 
