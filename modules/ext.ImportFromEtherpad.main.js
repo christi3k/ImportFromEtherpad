@@ -1,6 +1,4 @@
 /**
- * JavaScript for Welcome in Example.
- * Inserts a welcome message into the page content.
  */
 ( function ( mw, $ ) {
 	var suggestTitle;

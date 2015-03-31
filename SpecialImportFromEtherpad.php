@@ -41,7 +41,8 @@ class SpecialImportFromEtherpad extends SpecialPage {
 	 */
 	private $formErrors = array();
 
-	/** Constructor for Special page.
+	/** 
+	 * Constructor for Special page.
 	 *
 	 */
 	public function __construct() {
@@ -89,7 +90,12 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		// otherwise will display with errors and/or result of import
 	}
 
-	function getGroupName() {
+	/**
+	 * Determins where this specialpage is listed on Special:SpecialPages
+	 *
+	 * @return string name of specialpages section
+	 */
+	protected function getGroupName() {
 		return 'pagetools';
 	}
 
@@ -132,6 +138,7 @@ class SpecialImportFromEtherpad extends SpecialPage {
 			}
 		}
 
+		// make sure user is allowed to create pages and if yes, show import form
 		if ( $user->isAllowed( 'createpage' ) ) {
 			$out->addHTML(
 				Xml::fieldset($this->msg('importfrometherpad-fieldset-legend')->text()) .
@@ -178,14 +185,20 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		}
 	}
 
+	/**
+	 * Process the import request
+	 *
+	 * @throws PermissionsError
+	 * @return void
+	 */
 	protected function loadRequest() {
 		$request = $this->getRequest();
 		$user = $this->getUser();
 
 		// get values from request object
 		// @todo make this an array so we can iterate on it
-		$this->etherpadLink= $request->getText('etherpadLink');
-		$this->targetpageTitle = $request->getText('targetpageTitle');
+		$this->etherpadLink= trim($request->getText('etherpadLink'));
+		$this->targetpageTitle = trim($request->getText('targetpageTitle'));
 		$this->targetpageNs = $request->getIntOrNull('targetpageNs');
 		$this->pageAppendOrReplace = $request->getVal('pageAppendOrReplace');
 
@@ -261,6 +274,16 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		$this->displayForm($this->formErrors);
 	}
 
+	/**
+	 * Retrives content from etherpad and converts to mediawiki syntax if necessary.
+	 * Function first tries to retrieve mediawiki export, if that fails html.
+	 * Fatal errors are set in $this->result, a mw status object.
+	 * If article is successfully converted and saved, specific outcome
+	 * is recorded in $this->resultMessage.
+	 *
+	 * @return bool True if import is succesful, otherwise false.
+	 *
+	 */
 	private function importEtherpad() {
 		// check validity of ep url
 		// right now this just checks to make sure it's a valid URI
@@ -314,7 +337,14 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		}
 	}
 
+	/**
+	 * Save converted etherpad content as a wiki page. Uses Mediawiki API.
+	 *
+	 * @return array ApiResult data array
+	 */
 	private function saveArticle() {
+		// set whether or not we're creting/editing article with new content (text) 
+		// or appending to an existing one (text)
 		$textOrAppendText = ( isset( $this->pageAppendOrReplace ) && $this->pageAppendOrReplace == 'append') ? 'appendtext' : 'text';
 		// action for both page edit and create is 'edit'
 		// https://www.mediawiki.org/wiki/API:Edit
@@ -340,13 +370,21 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		return $api->getResult()->getData();
 	}
 
+	/**
+	 * Retreives and converts etherpad content, if necessary.
+	 * Stores content in $this->content
+	 *
+	 * @return bool result of retrival and conversion
+	 */
 	private function convertContent()
 	{
+		// need this to retrieve user-specified conv regexes
 		global $wgImportFromEtherpadSettings;
 
 		// derive the export url from etherpad url
 		$exportUrl = $this->getExportUrl();
 		if ($exportUrl === false) {
+			// @todo set user-facing error message
 			wfDebug('no exportUrl, aborting');
 			return false;
 		}
@@ -361,6 +399,7 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		else {
 			wfDebug('converting with pandoc');
 			// @todo add check that pandoc exists
+			// @todo pandoc 1.13.x has trouble retrieving from SSL etherpads - wget or curl content first?
 			$panDocCmd = $this->pathToPandoc . $this->pandocCmd . " -f html -t mediawiki " . $exportUrl['url'];
 			$this->content = wfShellExec($panDocCmd, $returnVal);
 			wfDebug('Pandoc return value: ' . $returnVal);
@@ -378,6 +417,11 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		return true;
 	}
 
+	/**
+	 * Takes user-facing etherpad url and determines valid export url, if it can find one.
+	 *
+	 * @return mixed array of url and scheme, otherwise false
+	 */
 	private function getExportUrl()
 	{
 		wfDebug('attempting to determine export url');
@@ -401,6 +445,12 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		return false;
 	}
 
+	/**
+	 * Takes a url and checks to see if it returns a good http status code.
+	 *
+	 * @param string $url 
+	 * @return bool true if returned http status code is ok
+	 */
 	private function isGoodExportUrl( $url ) {
 		$req = MWHttpRequest::factory( $url );
 		$status = $req->execute();
@@ -415,6 +465,13 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		}
 	}
 
+	/** 
+	 * Get contents returned by a url (etherpad export).
+	 *
+	 * @param string $url etherpad export url
+	 * @return mixed bool false if retrieval failed, string returned page contents
+	 *
+	 */
 	private function fetchContent( $url ) {
 		$req = MWHttpRequest::factory( $url );
 		$status = $req->execute();
