@@ -385,28 +385,23 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		$exportUrl = $this->getExportUrl();
 		if ($exportUrl === false) {
 			// @todo set user-facing error message
-			wfDebug('no exportUrl, aborting');
 			return false;
 		}
 
 		if ( $exportUrl['scheme'] == 'lite-mediawiki' ) {
 			// already mediawiki so no need to run through pandoc,
 			// just go get it
-			wfDebug('this is eplite that supports mediawiki export, using that');
 			$this->content = $this->fetchContent( $exportUrl['url'] );
 			if ( !$this->content) { return false; }
 		}
 		else {
-			wfDebug('converting with pandoc');
-			// @todo add check that pandoc exists
-			// @todo pandoc 1.13.x has trouble retrieving from SSL etherpads - wget or curl content first?
-			$panDocCmd = $this->pathToPandoc . $this->pandocCmd . " -f html -t mediawiki " . $exportUrl['url'];
-			$this->content = wfShellExec($panDocCmd, $returnVal);
-			wfDebug('Pandoc return value: ' . $returnVal);
+			$returnVal = $this->convertWithPandoc( $exportUrl );
+
 			if ( $returnVal !== 0 ) {
 				$this->formErrors[] = array( 'importfrometherpad-pandocerror' );
 				return false;
 			}
+
 			// @todo should prob move to a helper function
 			if ( isset($wgImportFromEtherpadSettings->contentRegexs) ) {
 				foreach ($wgImportFromEtherpadSettings->contentRegexs as $regex) {
@@ -424,7 +419,6 @@ class SpecialImportFromEtherpad extends SpecialPage {
 	 */
 	private function getExportUrl()
 	{
-		wfDebug('attempting to determine export url');
 		$parsedUrl = parse_url($this->etherpadLink);
 		// build an array of possible valid etherpad export urls
 		// in order of preference
@@ -435,7 +429,6 @@ class SpecialImportFromEtherpad extends SpecialPage {
 
 		// now loop through them until we find a good one
 		foreach ($schemes as $scheme => $url) {
-			wfDebug('testing: ' . $url);
 			if ( $this->isGoodExportUrl( $url ) ) {
 				return array('scheme' => $scheme, 'url' => $url);
 			}
@@ -455,12 +448,10 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		$req = MWHttpRequest::factory( $url );
 		$status = $req->execute();
 		if ( $status->isOK() ) {
-			wfDebug('url ' . $url . ' is OKAY');
 			return true;
 		}
 		else {
 			$statusCode = $req->getStatus();
-			wfDebug('Response code for etherpad url ' . $url . ' returned ' . $statusCode);
 			return false;
 		}
 	}
@@ -473,16 +464,53 @@ class SpecialImportFromEtherpad extends SpecialPage {
 	 *
 	 */
 	private function fetchContent( $url ) {
-		$req = MWHttpRequest::factory( $url );
+		$req = MWHttpRequest::factory( $url , array('followRedirects'=>true) );
+		// execute request twice to ensure expected cookies are set
+		$status = $req->execute();
+		$cj = $req->getCookieJar();
 		$status = $req->execute();
 		if ( $status->isOK() ) {
 			return $req->getContent();
 		}
 		else {
 			$statusCode = $req->getStatus();
-			wfDebug('Response code for etherpad url ' . $url . ' returned ' . $statusCode);
 			return false;
 		}
+	}
+
+	/**
+	 * Convert html to mediawiki with pandoc.
+	 *
+	 * First tries fetching html export, saving to a temp file and running through pandoc.
+	 * If that doesn't work, tries directly retreiving url with pandoc.
+	 *
+	 * Sets $this->content if successful.
+	 *
+	 * @param array $exportUrl
+	 * @return bool true/false whether or not operation succeeded
+	 */
+	private function convertWithPandoc( $exportUrl ) {
+		$returnVal = null;
+		// @todo add check that pandoc exists
+		// first try temp file method
+		$tempfname = tempnam(sys_get_temp_dir(), 'import-');
+		if ( $tempfname !== false ) {
+			$tempContent = $this->fetchContent($exportUrl['url']);
+			if ( $tempContent !== false ) {
+				$fhandle = fopen($tempfname,'w');
+				fwrite($fhandle, $tempContent);
+				fclose($fhandle);
+				$panDocCmd = $this->pathToPandoc . $this->pandocCmd . " -f html -t mediawiki " . $tempfname;
+				$this->content = wfShellExec($panDocCmd, $returnVal);
+				unlink($tempfname);
+			}
+		} else {
+			// temp file method didn't work, try direct execution via url
+			$panDocCmd = $this->pathToPandoc . $this->pandocCmd . " -f html -t mediawiki " . $exportUrl['url'];
+			$this->content = wfShellExec($panDocCmd, $returnVal);
+		}
+
+		return $returnVal;
 	}
 
 }
