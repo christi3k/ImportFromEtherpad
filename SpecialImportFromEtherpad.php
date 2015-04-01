@@ -293,6 +293,12 @@ class SpecialImportFromEtherpad extends SpecialPage {
 			return false;
 		}
 
+		// is the pad public?
+		if ( !$this->isPadPublic($this->etherpadLink) ) {
+			$this->result->fatal('importfrometherpad-privatepad');
+			return false;
+		}
+
 		// check validity of targettitle
 		// @todo check permissions if attempting to use namespaces?
 		$this->newTitle = Title::makeTitleSafe($this->targetpageNs, $this->targetpageTitle);
@@ -511,6 +517,35 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		}
 
 		return $returnVal;
+	}
+
+	private function isPadPublic( $url ) {
+		$req = MWHttpRequest::factory( $url );
+		$status = $req->execute();
+		$headers = $req->getResponseHeaders();
+
+		while ( $req->isRedirect() ){
+			// check to see if it's redirecting to a login
+			// ep/account/sign-in is the url fragment if the pad isn't public
+			// ep/pad/auth/ is fragment if pad has a password
+			if ( preg_match( '/ep\/account\/sign-in/', $headers['location'][0] ) || preg_match( '/ep\/pad\/auth/', $headers['location'][0] ) ) {
+				return false;
+			}
+			// grab the cookiejar
+			$cj = $req->getCookieJar();
+			// make new request
+			// @todo is first location always right one?
+			$req = MWHttpRequest::factory( $headers['location'][0] );
+			// set the cookiejar
+			$req->setCookieJar( $cj );
+			// execute the request
+			$status = $req->execute();
+			// get new headers
+			$headers = $req->getResponseHeaders();
+		}
+		// if we don't get a redirect to a sign-in page, assume it's public?
+		// @todo investigate whether or not there is a better test for this
+		return true;
 	}
 
 }
