@@ -37,5 +37,14 @@ class ImportFromEtherpadHooks {
 
 		return true;
 	}
+
+	public static function addToolboxItem( BaseTemplate $skinTemplate, array &$toolbox ) {
+		$toolbox['importfrometherpad-link'] = array(
+			'msg' => 'importfrometherpad-toolbox-link-title',
+			'href' => SpecialPage::getTitleFor('ImportFromEtherpad')->getLocalURL(),
+			'id' => 't-importfrometherpadlink',
+			'rel' => 'importfrometherpad-link'
+		);
+	}
 }
 /* vim:set ts=4 sw=4 sts=4 noexpandtab: */

@@ -23,5 +23,6 @@
   "importfrometherpad-novalidexporturl": "No valid etherpad export url found.",
   "importfrometherpad-fail": "Unable to import from etherpad",
   "importfrometherpad-pandocerror": "Error running pandoc command while converting content.",
-  "importfrometherpad-privatepad": "Etherpad is private (requires sign-in) or is password-protected. Make pad public and try again."
+  "importfrometherpad-privatepad": "Etherpad is private (requires sign-in) or is password-protected. Make pad public and try again.",
+  "importfrometherpad-toolbox-link-title": "Import an Etherpad"
 }

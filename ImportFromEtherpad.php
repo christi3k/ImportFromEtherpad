@@ -173,6 +173,8 @@ call_user_func( function() {
 
 	// register hoook that will load the confg vars that javascript needs
 	$GLOBALS['wgHooks']['ResourceLoaderGetConfigVars'][] = 'ImportFromEtherpadHooks::onResourceLoaderGetConfigVars';
+
+	$GLOBALS['wgHooks']['BaseTemplateToolbox'][] = 'ImportFromEtherpadHooks::addToolboxItem';
 } );
 
 /* vim:set ts=4 sw=4 sts=4 noexpandtab: */
