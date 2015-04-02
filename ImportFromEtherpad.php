@@ -115,10 +115,10 @@ call_user_func( function() {
 	}
 
 	// set tidy regex that most folks will want:
-	$GLOBALS['wgImportFromEtherpadSettings']->contentRegexs[] = array("<br\s*\/>","\n");
+	//$GLOBALS['wgImportFromEtherpadSettings']->contentRegexs[] = array("<br\s*\/>","\n");
 	// remove non-breaking spaces
 	// (for whatever reason, these sneak into etherpads when they shouldn't
-	$GLOBALS['wgImportFromEtherpadSettings']->contentRegexs[] = array("\x{00a0}+","");
+	//$GLOBALS['wgImportFromEtherpadSettings']->contentRegexs[] = array("\x{00a0}+","");
 
 	// remove url
 	$GLOBALS['wgImportFromEtherpadSettings']->hostRegexs[] = array('\w+\.\w+\.\w+','');
