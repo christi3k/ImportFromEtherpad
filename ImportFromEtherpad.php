@@ -66,7 +66,7 @@ class ImportFromEtherpadSettings {
 	 * Example: 
 	 * $wgImportFromEtherpadSettings->contentRegexs[] = array("<br\s*\/>","\n")
 	 *
-	 * @var array $contentRegexes
+	 * @var array $contentRegexs
 	 */
 	public $contentRegexs;
 
@@ -80,7 +80,7 @@ class ImportFromEtherpadSettings {
 	 * Example: 
 	 * $wgImportFromEtherpadSettings->hostRegexs[] = array('\w+\.\w+\.\w+','');
 	 *
-	 * @var array $contentRegexes
+	 * @var array $contentRegexs
 	 */
 	public $hostRegexs;
 
@@ -94,9 +94,24 @@ class ImportFromEtherpadSettings {
 	 * Example: 
 	 * $wgImportFromEtherpadSettings->pathRegexs[] = array('\w+\.\w+\.\w+','');
 	 *
-	 * @var array $contentRegexes
+	 * @var array $pathRegexs
 	 */
 	public $pathRegexs;
+
+	/**
+	 * multi-dimensional array of regexes used to determine suggested namespace
+	 *
+	 * Should use the form array('find regex','replacement namespace id'). Regex pattern
+	 * will automatically be placed inside delimiters, so indicate patterns without
+	 * preceding and trailing slashes.
+	 *
+	 * Example: 
+	 * $wgImportFromEtherpadSettings->nsRegexs[] = array('wiki\.etherpad\.mozilla\.org','4');
+	 * 4 is the id of the MozillaWiki namespace in this example
+	 *
+	 * @var array $nsRegexs
+	 */
+	public $nsRegexs;
 }
 
 $GLOBALS['wgImportFromEtherpadSettings'] = new ImportFromEtherpadSettings();

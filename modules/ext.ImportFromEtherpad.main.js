@@ -31,6 +31,15 @@
         suggested = ephost + eppath
       
         $( '#mw-targetpage' ).val(suggested);
+
+        // look to see if we should set a namespace based on the eplink
+        if (allConfig.nsRegexs != null) {
+          for (var i = 0; i < allConfig.nsRegexs.length; i++) {
+            if ( eplink.match(new RegExp(allConfig.nsRegexs[i][0])) ) {
+              $( '#mw-targetpage-ns' ).val( allConfig.nsRegexs[i][1] );
+            }
+          }
+        }
       });
     }
   }
