@@ -429,7 +429,16 @@ class SpecialImportFromEtherpad extends SpecialPage {
 		// build an array of possible valid etherpad export urls
 		// in order of preference
 		$schemes = array();
-		$schemes['classic-html'] = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . '/' . 'ep/pad/export' . $parsedUrl['path'] . '/latest?format=html';
+
+		// check for revision-specific url (ep classic only)
+		// and set schema accordingly
+		if ( preg_match("#/ep/pad/view/#" , $parsedUrl['path']) ) {
+			$parsedUrl['path'] = preg_replace("#/ep/pad/view/#","/ep/pad/export/", $parsedUrl['path']);
+			$schemes['classic-html'] = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $parsedUrl['path'] . '?format=html';
+		}
+		else {
+			$schemes['classic-html'] = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . '/' . 'ep/pad/export' . $parsedUrl['path'] . '/latest?format=html';
+		}
 		$schemes['lite-mediawiki'] = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $parsedUrl['path'] . '/export/mediawiki';
 		$schemes['lite-html'] = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $parsedUrl['path'] . '/export/html';
 
