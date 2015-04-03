@@ -20,6 +20,7 @@
   "importfrometherpad-append-btn" : "Append",
   "importfrometherpad-replace-btn" : "Replace",
   "importfrometherpad-sucessful-new": "You have created a new page.",
+  "importfrometherpad-sucessful-nochange": "Import successful, but page was not updated because content was identical.",
   "importfrometherpad-novalidexporturl": "No valid etherpad export url found.",
   "importfrometherpad-fail": "Unable to import from etherpad",
   "importfrometherpad-pandocerror": "Error running pandoc command while converting content.",
